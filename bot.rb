@@ -23,8 +23,12 @@ Telegram::Bot::Client.run(token) do |bot|
     when '/clear'
       bot.api.send_message(chat_id: message.chat.id, text: "История очищена.")
     else
-      # Любой другой текст — считаем λ-выражением
-      result = LambdaCalculus.evaluate(message.text) # замени на реальный вызов твоего гема
+      begin
+        term = LyambdaGem::Parser.new(message.text).parse
+        result = LyambdaGem::Reducer.to_normal(term).to_s
+      rescue LyambdaGem::ParseError => e
+        result = "Ошибка: #{e.message}"
+      end
       bot.api.send_message(chat_id: message.chat.id, text: result)
     end
   end
