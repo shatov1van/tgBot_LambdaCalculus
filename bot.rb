@@ -21,13 +21,13 @@ Telegram::Bot::Client.run(token) do |bot|
         reply_markup: Keyboard.hotbar
       )
     when '/reduce'
-      user_status[user_id] = :waiting_lambda
+      user_states[user_id] = :waiting_lambda
       bot.api.send_message(
         chat_id: message.chat.id,
         text: "Введите λ-выражение, которое нужно проредуцировать:"
       )
     when '/help'
-      user_status.delete(user_id)
+      user_states.delete(user_id)
       bot.api.send_message(
         chat_id: message.chat.id, 
         text: "Команды:\n/start - запуск бота\n/reduce - проредуцировать лямбда-выражение\n
