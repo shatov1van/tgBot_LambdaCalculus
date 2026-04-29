@@ -2,8 +2,12 @@ meta:
   environment: ruby
   toolchain:
     name: bundle
-    version: 3.4
-
+    version: 3.4.8
+build:
+  image: null
 run:
-  command: gem install telegram-bot-ruby && bundle exec ruby bot.rb
+  image: null
+  mainScript: bot.rb
   persistenceMount: /data
+  containerPort: "80"
+  servicePort: "80"
