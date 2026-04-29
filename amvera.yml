@@ -5,5 +5,5 @@ meta:
     version: 3.4
 
 run:
-  command: bundle exec ruby bot.rb
+  command: gem install telegram-bot-ruby && bundle exec ruby bot.rb
   persistenceMount: /data
