@@ -8,7 +8,7 @@ module Keyboard
         ],
         [
           Telegram::Bot::Types::KeyboardButton.new(text: '/history'),
-          Telegram::Bot::Types::KeyboardButton.new(text: '/stop')
+          Telegram::Bot::Types::KeyboardButton.new(text: '/reset')
         ]
       ],
       resize_keyboard: true,
