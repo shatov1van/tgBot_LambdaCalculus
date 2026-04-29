@@ -7,7 +7,7 @@ build:
   image: null
 run:
   image: null
-  mainScript: bundle exec ruby bot.rb
+  mainScript: "bundle exec ruby bot.rb"
   persistenceMount: /data
   containerPort: "80"
   servicePort: "80"
