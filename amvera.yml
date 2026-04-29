@@ -1,7 +1,7 @@
 meta:
   environment: ruby
   toolchain:
-    name: bundler
+    name: bundle
     version: 3.4
 
 run:
