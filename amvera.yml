@@ -1,0 +1,11 @@
+meta:
+  environment: ruby
+  toolchain:
+    name: bundler
+    version: 3.4.8
+
+build:
+  command: bundle install
+
+run:
+  command: ruby bot.rb
