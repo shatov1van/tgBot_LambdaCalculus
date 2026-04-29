@@ -1,6 +1,7 @@
 require 'telegram/bot'
 require 'lyambda_gem'
 require 'dotenv/load'
+require 'bundler/setup'
 require_relative 'keyboard'
 
 token = ENV['TELEGRAM_BOT_TOKEN']
