@@ -4,8 +4,5 @@ meta:
     name: bundler
     version: 3.4.8
 
-build:
-  command: bundle install
-
 run:
   command: bundle exec ruby bot.rb
