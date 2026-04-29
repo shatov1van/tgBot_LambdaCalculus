@@ -8,4 +8,4 @@ build:
   command: bundle install
 
 run:
-  command: ruby bot.rb
+  command: bundle exec ruby bot.rb
