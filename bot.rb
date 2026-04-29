@@ -1,8 +1,9 @@
 require 'telegram/bot'
 require 'lyambda_gem'
+require 'dotenv/load'
 require_relative 'keyboard'
 
-token = '8506346847:AAFD6YrU8MwCadm2cpF_wyFCVg_8Y_vRJ20'
+token = ENV['TELEGRAM_BOT_TOKEN']
 
 #Состояния пользователей
 user_states = {}
@@ -31,7 +32,7 @@ Telegram::Bot::Client.run(token) do |bot|
       user_states[user_id] = nil
       bot.api.send_message(
         chat_id: message.chat.id, 
-        text: "Команды:\n/info - подробная информация о боте\n/reduce - проредуцировать лямбда-выражение\n/help - информация о командах\n/history - история всех решений\n/reset - сброс состояния",
+        text: "Команды:\n/info - подробная информация о боте\n/reduce - проредуцировать лямбда-выражение\n/help - информация о командах\n/history - история всех решений\n/reset - сброс истории",
         reply_markup: Keyboard.hotbar)
     when '/history'
       user_states[user_id] = nil
