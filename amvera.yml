@@ -1,13 +1,6 @@
 meta:
-  environment: ruby
-  toolchain:
-    name: bundle
-    version: 3.4
-build:
-  image: null
+  environment: docker
 run:
-  image: null
-  mainScript: "bundle exec ruby bot.rb"
   persistenceMount: /data
   containerPort: "80"
   servicePort: "80"
