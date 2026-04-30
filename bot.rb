@@ -14,8 +14,7 @@ user_states = {}
 # Вспомогательная функция для пошаговой редукции с отправкой каждого шага в чат
 def step_by_step_reduction(term, bot, chat_id)
   step = 0
-  answer = "##{step} `#{term}`"
-  
+  answer = "##{step} `#{term}`\n"
   
   while term.reduceable?
     term = term.reduce(strategy: :normal_order)
@@ -115,7 +114,7 @@ Telegram::Bot::Client.run(token) do |bot|
               text: "Результат редукции: #{result}\n\nНапишите новый терм для редуцирования или /help",
               reply_markup: Keyboard.hotbar
             )
-            user_states.delete(user_id)
+            #user_states.delete(user_id)
           when 'Пошаговая редукция'
             term = current_status[:term]
             input_text = current_status[:input_text]
@@ -128,14 +127,14 @@ Telegram::Bot::Client.run(token) do |bot|
               text: "Редукция завершена. Конечный результат: #{result}\n\nНапишите новый терм для редуцирования или /help",
               reply_markup: Keyboard.hotbar
             )
-            user_states.delete(user_id)
+            #user_states.delete(user_id)
           when 'Отмена'
             bot.api.send_message(
               chat_id: message.chat.id,
               text: "Редукция отменена. Нажмите /reduce, чтобы начать заново.",
               reply_markup: Keyboard.hotbar
             )
-            user_states.delete(user_id)
+            #user_states.delete(user_id)
           else
             bot.api.send_message(
               chat_id: message.chat.id,
