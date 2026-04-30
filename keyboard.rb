@@ -15,4 +15,19 @@ module Keyboard
       one_time_keyboard: false
     )
   end
+  def self.reduction_mode_keyboard
+    Telegram::Bot::Types::ReplyKeyboardMarkup.new(
+      keyboard: [
+        [
+          Telegram::Bot::Types::KeyboardButton.new(text: 'Обычная редукция'),
+          Telegram::Bot::Types::KeyboardButton.new(text: 'Пошаговая редукция')
+        ],
+        [
+          Telegram::Bot::Types::KeyboardButton.new(text: 'Отмена')
+        ]
+      ],
+      resize_keyboard: true,
+      one_time_keyboard: true
+    )
+  end
 end

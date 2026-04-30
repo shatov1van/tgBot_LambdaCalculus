@@ -7,15 +7,34 @@ require_relative 'keyboard'
 
 token = ENV['TELEGRAM_BOT_TOKEN']
 
-#Состояния пользователей
+# Состояния пользователей: может быть :waiting_lambda, :waiting_reduction_mode
 user_states = {}
 @history = {}
+
+# Вспомогательная функция для пошаговой редукции с отправкой каждого шага в чат
+def step_by_step_reduction(term, bot, chat_id)
+  step = 0
+  bot.api.send_message(chat_id: chat_id, text: "##{step} #{term}")
+  
+  while term.reduceable?
+    term = term.reduce(strategy: :normal_order)
+    step += 1
+    bot.api.send_message(chat_id: chat_id, text: "##{step} #{term}")
+    if step > 1000
+      bot.api.send_message(chat_id: chat_id, text: "Редукция не завершилась за 1000 шагов, возможно бесконечный цикл. Прерывание.")
+      break
+    end
+  end
+  term
+end
+
 Telegram::Bot::Client.run(token) do |bot|
   bot.listen do |message|
     puts "Получено сообщение: #{message.text.inspect}"
     user_id = message.from.id
     current_status = user_states[user_id]
-    @history[user_id] ||= {} #инициализировали хэш для хранения истории конкретного юзера
+    @history[user_id] ||= {} # инициализация истории для пользователя
+
     case message.text
     when '/start'
       user_states.delete(user_id)
@@ -35,7 +54,8 @@ Telegram::Bot::Client.run(token) do |bot|
       bot.api.send_message(
         chat_id: message.chat.id, 
         text: "Команды:\n/info - подробная информация о боте\n/reduce - проредуцировать лямбда-выражение\n/help - информация о командах\n/history - история всех решений\n/reset - сброс истории",
-        reply_markup: Keyboard.hotbar)
+        reply_markup: Keyboard.hotbar
+      )
     when '/history'
       user_states[user_id] = nil
       if @history[user_id].empty?
@@ -55,31 +75,89 @@ Telegram::Bot::Client.run(token) do |bot|
       user_states[user_id] = nil
       bot.api.send_message(
         chat_id: message.chat.id, 
-        text: "Это бот LambdaCalculus, он предназначен для редуцирования лямбда-выражений.
-        Главная команда это /reduce, после нее нужно вводить термы и вы получите результат.
-        История ваших запросов/ответов сохраняется, чтобы ее увидеть нужно нажать на /history.
-        Команда /reset очистит вашу историю. Бот максимально прост в использовании.",
-        reply_markup: Keyboard.hotbar)
+        text: "Это бот LambdaCalculus, он предназначен для редуцирования лямбда-выражений.\nГлавная команда это /reduce, после нее нужно вводить термы и вы получите результат.\nИстория ваших запросов/ответов сохраняется, чтобы ее увидеть нужно нажать на /history.\nКоманда /reset очистит вашу историю. Бот максимально прост в использовании.",
+        reply_markup: Keyboard.hotbar
+      )
     else
-      #Обработка некорреткного ввода
-      unless current_status == :waiting_lambda
+      # Обработка состояний
+      case current_status
+      when :waiting_lambda
+        # Пользователь ввёл терм для редукции
+        begin
+          input_text = message.text
+          term = LyambdaGem::Parser.new(input_text).parse
+          # Сохраняем терм и исходную строку в состоянии, переходим к выбору режима
+          user_states[user_id] = { state: :waiting_reduction_mode, term: term, input_text: input_text }
+          bot.api.send_message(
+            chat_id: message.chat.id,
+            text: "Выберите режим редукции:",
+            reply_markup: Keyboard.reduction_mode_keyboard
+          )
+        rescue LyambdaGem::ParseError => e
+          result = "Ошибка: #{e.message}.\nВозможно вы не правильно ввели терм."
+          bot.api.send_message(chat_id: message.chat.id, text: result, reply_markup: Keyboard.hotbar)
+          # Оставляем состояние :waiting_lambda, чтобы можно было повторить ввод
+        end
+      when Hash
+        # Ожидание выбора режима редукции
+        if current_status[:state] == :waiting_reduction_mode
+          case message.text
+          when 'Обычная редукция'
+            term = current_status[:term]
+            input_text = current_status[:input_text]
+            result = LyambdaGem::Reducer.to_normal(term, verbose: false).to_s
+            # Сохраняем в историю
+            @history[user_id][input_text] = result
+            bot.api.send_message(
+              chat_id: message.chat.id,
+              text: "Результат редукции: #{result}\n\nНапишите новый терм для редуцирования или /help",
+              reply_markup: Keyboard.hotbar
+            )
+            user_states.delete(user_id)
+          when 'Пошаговая редукция'
+            term = current_status[:term]
+            input_text = current_status[:input_text]
+            # Выполняем пошаговую редукцию
+            final_term = step_by_step_reduction(term, bot, message.chat.id)
+            result = final_term.to_s
+            @history[user_id][input_text] = result
+            bot.api.send_message(
+              chat_id: message.chat.id,
+              text: "Редукция завершена. Конечный результат: #{result}\n\nНапишите новый терм для редуцирования или /help",
+              reply_markup: Keyboard.hotbar
+            )
+            user_states.delete(user_id)
+          when 'Отмена'
+            bot.api.send_message(
+              chat_id: message.chat.id,
+              text: "Редукция отменена. Нажмите /reduce, чтобы начать заново.",
+              reply_markup: Keyboard.hotbar
+            )
+            user_states.delete(user_id)
+          else
+            bot.api.send_message(
+              chat_id: message.chat.id,
+              text: "Пожалуйста, выберите режим, используя кнопки ниже.",
+              reply_markup: Keyboard.reduction_mode_keyboard
+            )
+          end
+        else
+          # Неизвестное состояние – сброс
+          user_states.delete(user_id)
+          bot.api.send_message(
+            chat_id: message.chat.id,
+            text: "Я не понимаю ваш запрос, нажмите /help!",
+            reply_markup: Keyboard.hotbar
+          )
+        end
+      else
+        # Нет активного состояния – неизвестная команда
         bot.api.send_message(
           chat_id: message.chat.id,
           text: "Я не понимаю ваш запрос, нажмите /help!",
           reply_markup: Keyboard.hotbar
         )
-        next
       end
-      begin
-        #Здесь парсинг лямбда выражений
-        term = LyambdaGem::Parser.new(message.text).parse
-        result = LyambdaGem::Reducer.to_normal(term).to_s
-      rescue LyambdaGem::ParseError => e
-        result = "Ошибка: #{e.message}.\nВозможно вы не правильно ввели терм."
-      end
-      #Запись ответа в историю
-      @history[user_id][term] = result
-      bot.api.send_message(chat_id: message.chat.id, text: "Результат редуцирования: #{result}\n\nНапишите новый терм для редуцирования или /help", reply_markup: Keyboard.hotbar)
     end
   end
 end
