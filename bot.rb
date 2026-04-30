@@ -25,7 +25,7 @@ def step_by_step_reduction(term, bot, chat_id)
       break
     end
   end
-  bot.api.send_message(chat_id: chat_id, text: answer)
+  bot.api.send_message(chat_id: chat_id, text: answer, parse_mode: 'Markdown2')
   term
 end
 
@@ -64,9 +64,9 @@ Telegram::Bot::Client.run(token) do |bot|
       else
         current_history = ''
         @history[user_id].each do |key, value|
-          current_history += "(Запрос/Ответ) `#{key}` -> `#{value}`\n\n"
+          current_history += "\(Запрос/Ответ\) `#{key}` -> `#{value}`\n\n"
         end
-        bot.api.send_message(chat_id: message.chat.id, text: "История на текущий момент:\n#{current_history}", reply_markup: Keyboard.hotbar)
+        bot.api.send_message(chat_id: message.chat.id, text: "История на текущий момент:\n#{current_history}", reply_markup: Keyboard.hotbar, parse_mode: 'Markdown2')
       end
     when '/reset'
       bot.api.send_message(chat_id: message.chat.id, text: "История очищена!", reply_markup: Keyboard.hotbar)
