@@ -14,17 +14,19 @@ user_states = {}
 # Вспомогательная функция для пошаговой редукции с отправкой каждого шага в чат
 def step_by_step_reduction(term, bot, chat_id)
   step = 0
-  bot.api.send_message(chat_id: chat_id, text: "##{step} #{term}")
+  answer = "##{step} `#{term}`"
+  
   
   while term.reduceable?
     term = term.reduce(strategy: :normal_order)
     step += 1
-    bot.api.send_message(chat_id: chat_id, text: "##{step} #{term}")
-    if step > 1000
-      bot.api.send_message(chat_id: chat_id, text: "Редукция не завершилась за 1000 шагов, возможно бесконечный цикл. Прерывание.")
+    answer += "##{step} `#{term}`\n"
+    if step > 99
+      bot.api.send_message(chat_id: chat_id, text: "Редукция не завершилась за 99 шагов, возможно бесконечный цикл. Прерывание.")
       break
     end
   end
+  bot.api.send_message(chat_id: chat_id, text: answer)
   term
 end
 
@@ -63,7 +65,7 @@ Telegram::Bot::Client.run(token) do |bot|
       else
         current_history = ''
         @history[user_id].each do |key, value|
-          current_history += "(Запрос/Ответ) #{key} -> #{value}\n\n"
+          current_history += "(Запрос/Ответ) `#{key}` -> `#{value}`\n\n"
         end
         bot.api.send_message(chat_id: message.chat.id, text: "История на текущий момент:\n#{current_history}", reply_markup: Keyboard.hotbar)
       end
