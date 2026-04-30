@@ -35,3 +35,9 @@ puts "################"
 term1 = app(app(abs(x, abs(u, app(x, u))), p2), abs(i, p1))
 puts term1
 puts Reducer.to_normal(term1, verbose: true).to_s
+
+# Тест на бесконечную редукцию
+puts "################"
+term1 = Parser.new("(\\x. x x) (\\x. x x)").parse
+puts term1
+puts Reducer.to_normal(term1, verbose: true).to_s
