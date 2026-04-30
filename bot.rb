@@ -1,4 +1,3 @@
-system("bundle install")
 require 'bundler/setup'
 Bundler.require(:default)
 require 'telegram/bot'
